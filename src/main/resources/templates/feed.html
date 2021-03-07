@@ -9,6 +9,16 @@
 <body>
 	<div class="container-fluid">
 		<div th:replace="fragments/navbar"></div>
+		<ul class="nav nav-tabs">
+			<li role="presentation"
+				th:classappend="${filter == 'all' ? 'active' : '' }"><a
+				href="/tweets">All</a></li>
+				<li>/</li>
+			<li role="presentation"
+				th:classappend="${filter == 'following' ? 'active' : '' }"><a
+				href="/tweets?filter=following"> Following</a></li>
+		</ul>
+		<br />
 		<h2>Tweets</h2>
 		<div class="list-group" th:each="tweet:${tweetList}">
 			<div class="list-group-item list-group-item-action">
@@ -19,8 +29,7 @@
 							th:text="${tweet.user.username}"></span>
 						</a>
 					</h5>
-					<small>Tweeted: <span
-						th:text="${#dates.format(tweet.createdAt, 'M/d/yyyy')}"></span></small>
+					<small th:text="${tweet.date}"></small>
 				</div>
 				<p th:utext="${tweet.message}"></p>
 			</div>
@@ -28,6 +37,12 @@
 		<div th:if="${#lists.isEmpty(tweetList)}">
 			<h3>No tweets have been created yet</h3>
 		</div>
+	</div>
+	<div th:if="${#lists.isEmpty(tweetList) and filter == 'all'}">
+		<h3>No tweets have been created yet</h3>
+	</div>
+	<div th:if="${#lists.isEmpty(tweetList) and filter == 'following'}">
+		<h3>No tweets have been created by your followers</h3>
 	</div>
 	<script th:replace="fragments/scripts"></script>
 </body>

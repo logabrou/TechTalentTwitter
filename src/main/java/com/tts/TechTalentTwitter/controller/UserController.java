@@ -1,5 +1,6 @@
 package com.tts.TechTalentTwitter.controller;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -8,8 +9,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.tts.TechTalentTwitter.model.Tweet;
+import com.tts.TechTalentTwitter.model.TweetDisplay;
 import com.tts.TechTalentTwitter.model.User;
 import com.tts.TechTalentTwitter.service.TweetService;
 import com.tts.TechTalentTwitter.service.UserService;
@@ -27,7 +30,7 @@ public class UserController {
   @GetMapping(value = "/users/{username}")
   public String getUser(@PathVariable(value="username") String username, Model model) {
     User user = userService.findByUsername(username);
-    List<Tweet> tweets = tweetService.findAllByUser(user);
+    List<TweetDisplay> tweets = tweetService.findAllByUser(user);
     User loggedInUser = userService.getLoggedInUser();
     List<User> following = loggedInUser.getFollowing();
     boolean isFollowing = false;
@@ -44,24 +47,41 @@ public class UserController {
     return "user";
   }
   
-//  Returns all users by binding to html page users, sets each users tweet count, takes current
-// logged in user and gets their followers, finally serves the users html page
+//  Value filter is bound to String filter. 
   @GetMapping(value = "/users")
-  public String getUsers(Model model) {
-    List<User> users = userService.findAll();
-    model.addAttribute("users", users);
-    setTweetCounts(users, model);
-    User loggedInUser = userService.getLoggedInUser();
-    List<User> usersFollowing = loggedInUser.getFollowing();
-    setFollowingStatus(users, usersFollowing, model);
-    return "users";
-  }
+	public String getUsers(@RequestParam(value = "filter", required = false) String filter, Model model) {
+		List<User> users = new ArrayList<User>();
+
+		User loggedInUser = userService.getLoggedInUser();
+
+		List<User> usersFollowing = loggedInUser.getFollowing();
+		List<User> usersFollowers = loggedInUser.getFollowers();
+		if (filter == null) {
+			filter = "all";
+		}
+		if (filter.equalsIgnoreCase("followers")) {
+			users = usersFollowers;
+			model.addAttribute("filter", "followers");
+		} else if (filter.equalsIgnoreCase("following")) {
+			users = usersFollowing;
+			model.addAttribute("filter", "following");
+		} else {
+			users = userService.findAll();
+			model.addAttribute("filter", "all");
+		}
+		model.addAttribute("users", users);
+
+		setTweetCounts(users, model);
+		setFollowingStatus(users, usersFollowing, model);
+
+		return "users";
+	}
   
 //Put number of tweets of all users into hashmao with their name and #, bind to html page users
   private void setTweetCounts(List<User> users, Model model) {
     HashMap<String, Integer> tweetCounts = new HashMap<>();
     for (User user : users) {
-      List<Tweet> tweets = tweetService.findAllByUser(user);
+      List<TweetDisplay> tweets = tweetService.findAllByUser(user);
       tweetCounts.put(user.getUsername(), tweets.size());
     }
     model.addAttribute("tweetCounts", tweetCounts);

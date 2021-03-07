@@ -17,6 +17,9 @@ public class FollowController {
 	@Autowired
 	private UserService userService;
 
+	
+//	Post because we are creating a new entry in a database. From the 
+//	path follow/username, 
 	@PostMapping(value = "/follow/{username}")
 	public String follow(@PathVariable(value = "username") String username, HttpServletRequest request) {
 		User loggedInUser = userService.getLoggedInUser();

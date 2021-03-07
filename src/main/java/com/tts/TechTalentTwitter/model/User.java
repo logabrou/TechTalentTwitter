@@ -59,6 +59,10 @@ public class User {
 	  @CreationTimestamp
 	  private Date createdAt;
 
+	  
+//	  First join table, each user_id is placed next to the multiple possible roles
+//	  they've acquired, and each role has many users. The private roles references 
+//	  a set of Role objects, since we are in the User class
 	  @ManyToMany(cascade = CascadeType.ALL)
 	  @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), 
 	  inverseJoinColumns = @JoinColumn(name = "role_id"))

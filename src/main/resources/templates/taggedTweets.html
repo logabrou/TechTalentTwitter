@@ -21,8 +21,7 @@
 							th:text="${tweet.user.username}"></span>
 						</a>
 					</h5>
-					<small>Tweeted: <span
-						th:text="${#dates.format(tweet.createdAt, 'M/d/yyyy')}"></span></small>
+					<small th:text="${tweet.date}"></small>
 				</div>
 				<p th:utext="${tweet.message}"></p>
 			</div>

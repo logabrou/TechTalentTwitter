@@ -24,43 +24,68 @@ import com.tts.TechTalentTwitter.service.UserService;
 
 @Controller
 public class TweetController {
+	
 	@Autowired
-	private UserService userService;
-
+    private UserService userService;
+	
 	@Autowired
 	private TweetService tweetService;
+	
+	@Autowired
+	private TagRepository tagRepository;
+	
+    @GetMapping(value= {"/tweets", "/"})
+    public String getFeed(@RequestParam(value="filter", required=false) String filter, Model model){
+    	User loggedInUser = userService.getLoggedInUser();
+    	List<TweetDisplay> tweets = new ArrayList<>();
+    	
+    	if (filter == null) {
+    		filter = "all";
+    	}
+    	if (filter.equalsIgnoreCase("following")) {
+    		List<User> following = loggedInUser.getFollowing();
+    		tweets = tweetService.findAllByUsers(following);
+    		model.addAttribute("filter", "following");
+    	}
+    	else {
+    		tweets = tweetService.findAll();
+    		model.addAttribute("filter", "all");
+    	}
 
-	@GetMapping(value = { "/tweets", "/" })
-	public String getFeed(Model model) {
-		List<Tweet> tweets = tweetService.findAll();
-		model.addAttribute("tweetList", tweets);
-		return "feed";
-	}
+        model.addAttribute("tweetList", tweets);
+        return "feed";
+    }
+    
+    @GetMapping(value = "/tweets/new")
+    public String getTweetForm(Model model) {
+        model.addAttribute("tweet", new Tweet());
+        return "newTweet";
+    }
+    
+    @PostMapping(value = "/tweets")
+    public String submitTweetForm(@Valid Tweet tweet, BindingResult bindingResult, Model model) {
+    	User user = userService.getLoggedInUser();
+        if (!bindingResult.hasErrors()) {
+        	tweet.setUser(user);
+            tweetService.save(tweet);
+            model.addAttribute("successMessage", "Tweet successfully created!");
+            model.addAttribute("tweet", new Tweet());
+        }
+        return "newTweet";
+    }
+    
+    @GetMapping(value = "/tweets/{tag}")
+    public String getTweetsByTag(@PathVariable(value="tag") String tag, Model model) {
+    	List<TweetDisplay> tweets = tweetService.findAllWithTag(tag);
+    	model.addAttribute("tweetList", tweets);
+    	model.addAttribute("tag", tag);
+    	return "taggedTweets";
+    }
 
-	@GetMapping(value = "/tweets/new")
-	public String getTweetForm(Model model) {
-		model.addAttribute("tweet", new Tweet());
-		return "newTweet";
-	}
-
-	@PostMapping(value = "/tweets/new")
-	public String submitTweetForm(@Valid Tweet tweet, BindingResult bindingResult, Model model) {
-		User user = userService.getLoggedInUser();
-		if (!bindingResult.hasErrors()) {
-			tweet.setUser(user);
-			tweetService.save(tweet);
-			model.addAttribute("successMessage", "Tweet successfully created!");
-			model.addAttribute("tweet", new Tweet());
-		}
-		return "newTweet";
-	}
-
-	@GetMapping(value = "/tweets/{tag}")
-	public String getTweetsByTag(@PathVariable(value = "tag") String tag, Model model) {
-		List<Tweet> tweets = tweetService.findAllWithTag(tag);
-		model.addAttribute("tweetList", tweets);
-		model.addAttribute("tag", tag);
-		return "taggedTweets";
-	}
-
+    @GetMapping(value = "/tags")
+    public String getTags(Model model) {
+    	List<Tag> tag = (List<Tag>)tagRepository.findAll();
+    	model.addAttribute("tagList", tag);
+    	return "tags";
+    }
 }
